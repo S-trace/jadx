@@ -15,7 +15,7 @@ import jadx.gui.utils.NLS;
 import jadx.gui.utils.UiUtils;
 
 public class JClass extends JLoadableNode {
-	private static final long serialVersionUID = -1239986875244097177L;
+	private static final long serialVersionUID = 5019325658819500428L;
 
 	private static final ImageIcon ICON_CLASS = UiUtils.openIcon("class_obj");
 	private static final ImageIcon ICON_CLASS_DEFAULT = UiUtils.openIcon("class_default_obj");
@@ -57,6 +57,13 @@ public class JClass extends JLoadableNode {
 			loaded = true;
 		}
 		update();
+	}
+
+	public synchronized void refresh() {
+		cls.refresh();
+		loaded = true;
+		update();
+		cls.unload();
 	}
 
 	public synchronized void update() {

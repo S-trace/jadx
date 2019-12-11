@@ -23,7 +23,7 @@ import jadx.gui.ui.MainWindow;
 import jadx.gui.utils.JumpPosition;
 
 public abstract class AbstractCodeArea extends RSyntaxTextArea {
-	private static final long serialVersionUID = -3980354865216031972L;
+	private static final long serialVersionUID = 8813096716985165327L;
 
 	private static final Logger LOG = LoggerFactory.getLogger(AbstractCodeArea.class);
 
@@ -52,6 +52,12 @@ public abstract class AbstractCodeArea extends RSyntaxTextArea {
 	 * Implement in this method the code that loads and sets the content to be displayed
 	 */
 	public abstract void load();
+
+	/**
+	 * Implement in this method the code that reloads node from cache and sets the new content to be
+	 * displayed
+	 */
+	public abstract void refresh();
 
 	public static RSyntaxTextArea getDefaultArea(MainWindow mainWindow) {
 		RSyntaxTextArea area = new RSyntaxTextArea();

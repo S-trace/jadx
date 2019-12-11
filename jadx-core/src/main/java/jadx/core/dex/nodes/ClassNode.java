@@ -279,6 +279,15 @@ public class ClassNode extends LineAttrNode implements ILoadable, ICodeNode {
 		return decompile();
 	}
 
+	public synchronized ICodeInfo refresh() {
+		ICodeCache codeCache = root().getCodeCache();
+		ClassNode topParentClass = getTopParentClass();
+		String clsRawName = topParentClass.getRawName();
+		codeCache.remove(clsRawName);
+		load();
+		return decompile();
+	}
+
 	@Override
 	public void load() {
 		for (MethodNode mth : getMethods()) {

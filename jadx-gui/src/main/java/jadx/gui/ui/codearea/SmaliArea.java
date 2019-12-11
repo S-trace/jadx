@@ -7,7 +7,7 @@ import jadx.gui.treemodel.TextNode;
 import jadx.gui.ui.ContentPanel;
 
 public final class SmaliArea extends AbstractCodeArea {
-	private static final long serialVersionUID = 1334485631870306494L;
+	private static final long serialVersionUID = 7138877208911224607L;
 
 	private final JNode textNode;
 
@@ -23,6 +23,11 @@ public final class SmaliArea extends AbstractCodeArea {
 			setText(node.getSmali());
 			setCaretPosition(0);
 		}
+	}
+
+	@Override
+	public void refresh() {
+		load();
 	}
 
 	@Override

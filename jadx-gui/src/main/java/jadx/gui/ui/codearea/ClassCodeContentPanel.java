@@ -18,7 +18,7 @@ import jadx.gui.utils.NLS;
  * </ul>
  */
 public final class ClassCodeContentPanel extends AbstractCodeContentPanel {
-	private static final long serialVersionUID = -7229931102504634591L;
+	private static final long serialVersionUID = -5259338047555948878L;
 
 	private final transient CodePanel javaCodePanel;
 	private final transient CodePanel smaliCodePanel;
@@ -68,6 +68,10 @@ public final class ClassCodeContentPanel extends AbstractCodeContentPanel {
 	@Override
 	public AbstractCodeArea getCodeArea() {
 		return javaCodePanel.getCodeArea();
+	}
+
+	public CodePanel getJavaCodePanel() {
+		return javaCodePanel;
 	}
 
 }

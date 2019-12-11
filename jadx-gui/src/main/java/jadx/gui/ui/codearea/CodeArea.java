@@ -26,7 +26,7 @@ import jadx.gui.utils.JumpPosition;
 public final class CodeArea extends AbstractCodeArea {
 	private static final Logger LOG = LoggerFactory.getLogger(CodeArea.class);
 
-	private static final long serialVersionUID = 6312736869579635796L;
+	private static final long serialVersionUID = -2979265882167540387L;
 
 	CodeArea(ContentPanel contentPanel) {
 		super(contentPanel);
@@ -49,6 +49,11 @@ public final class CodeArea extends AbstractCodeArea {
 			setText(node.getContent());
 			setCaretPosition(0);
 		}
+	}
+
+	@Override
+	public void refresh() {
+		setText(node.getContent());
 	}
 
 	private void addMenuItems() {

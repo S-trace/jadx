@@ -28,7 +28,7 @@ import jadx.gui.utils.JumpPosition;
 public class TabbedPane extends JTabbedPane {
 
 	private static final Logger LOG = LoggerFactory.getLogger(TabbedPane.class);
-	private static final long serialVersionUID = -8833600618794570904L;
+	private static final long serialVersionUID = 6198381156679409110L;
 
 	private final transient MainWindow mainWindow;
 	private final transient Map<JNode, ContentPanel> openTabs = new LinkedHashMap<>();
@@ -149,6 +149,13 @@ public class TabbedPane extends JTabbedPane {
 			setTabComponentAt(indexOfComponent(panel), makeTabComponent(panel));
 		}
 		return panel;
+	}
+
+	public void refresh(JNode node) {
+		ContentPanel panel = openTabs.get(node);
+		if (panel != null) {
+			setTabComponentAt(indexOfComponent(panel), makeTabComponent(panel));
+		}
 	}
 
 	@Nullable
