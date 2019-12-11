@@ -354,7 +354,7 @@ public class MainWindow extends JFrame {
 		cacheObject.setIndexJob(new IndexJob(wrapper, cacheObject, threadsCount));
 	}
 
-	void resetIndex() {
+	public void resetIndex() {
 		int threadsCount = settings.getThreadsCount();
 		cacheObject.setIndexJob(new IndexJob(wrapper, cacheObject, threadsCount));
 	}
@@ -467,7 +467,7 @@ public class MainWindow extends JFrame {
 		reloadTree();
 	}
 
-	void reloadTree() {
+	public void reloadTree() {
 		treeReloading = true;
 
 		treeModel.reload();

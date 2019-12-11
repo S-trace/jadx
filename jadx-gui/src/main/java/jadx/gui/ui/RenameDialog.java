@@ -9,9 +9,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.HashSet;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.*;
 
@@ -27,10 +26,13 @@ import jadx.core.dex.nodes.DexNode;
 import jadx.core.dex.nodes.RootNode;
 import jadx.core.dex.visitors.RenameVisitor;
 import jadx.core.utils.files.InputFile;
+import jadx.gui.jobs.BackgrounRefreshWorker;
+import jadx.gui.jobs.RefreshJob;
 import jadx.gui.treemodel.*;
 import jadx.gui.ui.codearea.ClassCodeContentPanel;
 import jadx.gui.ui.codearea.CodeArea;
 import jadx.gui.ui.codearea.CodePanel;
+import jadx.gui.utils.CacheObject;
 import jadx.gui.utils.CodeUsageInfo;
 import jadx.gui.utils.NLS;
 import jadx.gui.utils.TextStandardActions;
@@ -148,6 +150,7 @@ public class RenameDialog extends JDialog {
 	}
 
 	private void rename() {
+		long start = System.nanoTime();
 		String renameText = renameField.getText();
 		if (renameText == null || renameText.length() == 0 || codeArea.getText() == null) {
 			return;
@@ -162,7 +165,12 @@ public class RenameDialog extends JDialog {
 			dispose();
 			return;
 		}
-		refreshState(root);
+		long refreshStart = System.nanoTime();
+		int classes = refreshState(root);
+		long refreshTime = (System.nanoTime() - refreshStart) / 1000000;
+		long totalTime = (System.nanoTime() - start) / 1000000;
+		LOG.info("refreshState() took {} ms to update state, {} classes to be upgraded in background ({} ms total)", refreshTime, classes,
+				totalTime);
 		dispose();
 	}
 
@@ -194,42 +202,70 @@ public class RenameDialog extends JDialog {
 		return true;
 	}
 
-	private void refreshState(RootNode rootNode) {
+	private int refreshState(RootNode rootNode) {
 		RenameVisitor renameVisitor = new RenameVisitor();
 		renameVisitor.init(rootNode);
 
 		mainWindow.getCacheObject().getNodeCache().refresh(node);
 
-		TabbedPane tabbedPane = mainWindow.getTabbedPane();
-		refreshTabs(tabbedPane);
-		refreshUsages();
-		mainWindow.resetIndex();
+		Set<JavaClass> updatedClasses = getUpdatedClasses();
+
 		mainWindow.reloadTree();
+		refreshTabs(mainWindow.getTabbedPane(), updatedClasses);
+
+		if (updatedClasses.size() > 0) {
+			setRefreshTask(updatedClasses);
+		}
+
+		return updatedClasses.size();
 	}
 
-	private void refreshTabs(TabbedPane tabbedPane) {
+	private void refreshTabs(TabbedPane tabbedPane, Set<JavaClass> updatedClasses) {
 		for (Map.Entry<JNode, ContentPanel> panel : tabbedPane.getOpenTabs().entrySet()) {
 			ContentPanel contentPanel = panel.getValue();
 			if (contentPanel instanceof ClassCodeContentPanel) {
 				JNode node = panel.getKey();
-				node.getRootClass().refresh(); // Update code cache
-				ClassCodeContentPanel codePanel = (ClassCodeContentPanel) contentPanel;
-				CodePanel javaPanel = codePanel.getJavaCodePanel();
-				javaPanel.refresh();
-				tabbedPane.refresh(node);
+				JClass rootClass = node.getRootClass();
+				JavaClass javaClass = rootClass.getCls();
+				if (updatedClasses.contains(javaClass) || node.getRootClass().getCls() == javaClass) {
+					rootClass.refresh(); // Update code cache
+					ClassCodeContentPanel codePanel = (ClassCodeContentPanel) contentPanel;
+					CodePanel javaPanel = codePanel.getJavaCodePanel();
+					javaPanel.refresh();
+					tabbedPane.refresh(node);
+					updatedClasses.remove(javaClass);
+				}
 			}
 		}
 	}
 
-	private void refreshUsages() {
+	private Set<JavaClass> getUpdatedClasses() {
+		Set<JavaClass> usageClasses = new HashSet<>();
 		CodeUsageInfo usageInfo = mainWindow.getCacheObject().getUsageInfo();
-		if (usageInfo == null) {
-			return;
+		if (usageInfo != null) {
+			usageInfo.getUsageList(node).forEach((node) -> {
+				JavaClass rootClass = node.getRootClass().getCls();
+				// LOG.info("updateUsages(): Going to update class {}", rootClass.getRealFullName());
+				usageClasses.add(rootClass);
+			});
+			// usageClasses.parallelStream().forEach(JavaClass::refresh);
 		}
+		return usageClasses;
+	}
 
-		HashSet<JavaClass> usageClasses = new HashSet<>();
-		usageInfo.getUsageList(node).forEach((node) -> usageClasses.add(node.getRootClass().getCls()));
-		usageClasses.forEach(JavaClass::refresh);
+	private void setRefreshTask(Set<JavaClass> refreshClasses) {
+		CacheObject cache = mainWindow.getCacheObject();
+		RefreshJob refreshJob = new RefreshJob(mainWindow.getWrapper(), mainWindow.getSettings().getThreadsCount(), refreshClasses);
+		while (cache.getRefreshJob() != null) {
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				return;
+			}
+		}
+		cache.setRefreshJob(refreshJob);
+		BackgrounRefreshWorker refreshdWorker = new BackgrounRefreshWorker(mainWindow);
+		refreshdWorker.exec();
 	}
 
 	private void initCommon() {
