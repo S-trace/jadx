@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -225,9 +226,10 @@ public class RenameDialog extends JDialog {
 		if (usageInfo == null) {
 			return;
 		}
-		for (CodeNode node : usageInfo.getUsageList(node)) {
-			node.getRootClass().refresh(); // Update code cache
-		}
+
+		HashSet<JavaClass> usageClasses = new HashSet<>();
+		usageInfo.getUsageList(node).forEach((node) -> usageClasses.add(node.getRootClass().getCls()));
+		usageClasses.forEach(JavaClass::refresh);
 	}
 
 	private void initCommon() {
