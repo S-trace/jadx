@@ -147,6 +147,7 @@ public class TabbedPane extends JTabbedPane {
 			}
 			addContentPanel(panel);
 			setTabComponentAt(indexOfComponent(panel), makeTabComponent(panel));
+			mainWindow.runBackgroundIndexingJob();
 		}
 		return panel;
 	}

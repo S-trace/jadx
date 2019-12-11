@@ -372,6 +372,13 @@ public class MainWindow extends JFrame {
 		}
 	}
 
+	synchronized void runBackgroundIndexingJob() {
+		cancelBackgroundJobs();
+		cacheObject.setIndexJob(new IndexJob(wrapper, cacheObject, settings.getThreadsCount()));
+		backgroundWorker = new BackgroundWorker(cacheObject, progressPane);
+		backgroundWorker.exec();
+	}
+
 	public synchronized void cancelBackgroundJobs() {
 		if (backgroundWorker != null) {
 			backgroundWorker.stop();
