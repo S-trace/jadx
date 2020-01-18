@@ -238,6 +238,8 @@ public class RenameDialog extends JDialog {
 				JavaClass javaClass = rootClass.getCls();
 				if (updatedClasses.contains(javaClass) || node.getRootClass().getCls() == javaClass) {
 					LOG.info("Refreshing rootClass " + javaClass.getRawName());
+					javaClass.unload();
+					javaClass.getClassNode().deepUnload();
 					rootClass.refresh(); // Update code cache
 					ClassCodeContentPanel codePanel = (ClassCodeContentPanel) contentPanel;
 					CodePanel javaPanel = codePanel.getJavaCodePanel();
